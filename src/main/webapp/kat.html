@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>KAT</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script type="text/javascript" src="js/libs/jquery/jquery-1.10.2.js"></script>
+		<script type="text/javascript" src="js/libs/ember/handlebars-1.1.2.js"></script>
+		<script type="text/javascript" src="js/libs/ember/ember-1.7.0.js"></script>
+<!--
+		<link href="js/libs/bootstrap/css/bootstrap.css" rel="stylesheet" media="screen">
+		<script type="text/javascript" src="js/libs/bootstrap/js/bootstrap.js"></script>
+-->
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+
+		<script type="text/javascript" src="js/libs/ol/ol-debug.js"></script>
+		<link rel="stylesheet" type="text/css" href="js/libs/ol/ol.css">
+		<link rel="stylesheet" type="text/css" href="js/libs/ol/ol-zoomslider.css">
+		<script type="text/javascript" src="js/libs/ember/ol3/ember.ol3map.js"></script>
+
+		<script type="text/javascript" src="js/kat.ember.js"></script>
+		<script type="text/javascript" src="js/katmap.ember.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/kat.css">
+
+		<style type="text/css">
+			.popover {
+				z-index: auto;
+			}
+
+			.popover-content {
+				min-width: 180px;
+			}
+		</style>
+
+		<script type="text/x-handlebars" data-template-name="filesbox">
+			<div class="filesbox">
+				{{#each file in filesProxy}}
+					<div>
+					{{input type="checkbox" checked=file.checked}}<a {{action 'clickFile' file.name}}>{{file.name}}</a>
+					{{#each feat in file.features}}
+						<br>
+						{{input type="checkbox" checked=feat.visible}}
+						<i {{action 'zoomToFeature' feat.feature}} class="icon-screenshot"></i>
+						<a {{action 'clickFeature' feat.feature}} class="feature">{{feat.name}}</a>
+					{{/each}}
+					</div>
+				{{/each}}
+			</div>
+		</script>
+	</head>
+
+	<body style="padding-left:0px;padding-right:0px">
+		<script type="text/x-handlebars" data-template-name="application">
+			<div id="content">
+				<div id="main">
+					<div id="navbarele" class="navbar navbar-inverse" style="margin:0;border:0;">
+						<div class="navbar-inner" style="height:40px">
+							<a class="navbar-brand">KAT</a>
+							<ul id="navele" class="nav">
+							</ul>
+						</div>
+					</div>
+					{{view Kat.MapView lon=lon lat=lat zoom=zoom rotate=rotate handle=katmap}}
+				</div>
+				{{render "filesbox" filelist}}
+			</div>
+		</script>
+	</body>
+
+</html>

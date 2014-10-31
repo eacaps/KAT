@@ -1,0 +1,14 @@
+.ol-zoom .ol-zoom-out {
+  margin-top: 202px;
+}
+.ol-zoomslider {
+  background-color: transparent;
+  top: 2.3em;
+}
+
+.ol-touch .ol-zoom .ol-zoom-out { 
+  margin-top: 212px;
+}
+.ol-touch .ol-zoomslider {
+  top: 2.75em;
+}
