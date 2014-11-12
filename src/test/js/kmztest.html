@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Read a zip file demo</title>
+<link rel="stylesheet" href="../default.css">
+<link rel="stylesheet" href="demo.css">
+<link href='http://fonts.googleapis.com/css?family=Maven+Pro|Muli|Droid+Sans+Mono|Istok+Web' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+	<div id="container">
+		<h1>
+			zip.js
+		</h1>
+
+		<div class="description">
+			A JavaScript library to zip and unzip files
+			<hr>
+		</div>
+		
+		<h2>Read a zip file demo</h2>
+		
+		<ol id="demo-container">
+			<li>
+				<label>
+					<span class="form-label">choose a zip file</span>
+					<input type="file" accept="application/zip" id="file-input">
+				</label>
+			</li>
+			<li>
+				<label>
+					<span class="form-label">choose temporary storage</span>
+					<select id="creation-method-input">
+						<option value="Blob">RAM</option>
+						<option value="File">HDD</option>
+					</select>
+				</label>
+			</li>
+			<li>
+				<span class="form-label">download zip content</span>
+				<ul id="file-list">
+				</ul>
+			</li>
+		</ol>
+
+	</div>
+	<script type="text/javascript" src="zip.js"></script>
+	<script type="text/javascript" src="inflate.js"></script>
+	<script type="text/javascript">
+	
+	if (typeof String.prototype.endsWith !== 'function') {
+    String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    };
+}
+	
+	(function(obj) {
+
+	var requestFileSystem = obj.webkitRequestFileSystem || obj.mozRequestFileSystem || obj.requestFileSystem;
+
+	function onerror(message) {
+		alert(message);
+	}
+
+	function createTempFile(callback) {
+		var tmpFilename = "tmp.dat";
+		requestFileSystem(TEMPORARY, 4 * 1024 * 1024 * 1024, function(filesystem) {
+			function create() {
+				filesystem.root.getFile(tmpFilename, {
+					create : true
+				}, function(zipFile) {
+					callback(zipFile);
+				});
+			}
+
+			filesystem.root.getFile(tmpFilename, null, function(entry) {
+				entry.remove(create, create);
+			}, create);
+		});
+	}
+
+	var model = (function() {
+		var URL = obj.webkitURL || obj.mozURL || obj.URL;
+
+		return {
+			getEntries : function(file, onend) {
+				zip.createReader(new zip.BlobReader(file), function(zipReader) {
+					zipReader.getEntries(onend);
+				}, onerror);
+			},
+			getEntryFile : function(entry, creationMethod, onend, onprogress) {
+				var writer, zipFileEntry;
+
+				function getData() {
+					entry.getData(writer, function(blob) {
+						var blobURL = creationMethod == "Blob" ? URL.createObjectURL(blob) : zipFileEntry.toURL();
+						onend(blobURL);
+					}, onprogress);
+				}
+
+				if (creationMethod == "Blob") {
+					writer = new zip.BlobWriter();
+					getData();
+				} else {
+					createTempFile(function(fileEntry) {
+						zipFileEntry = fileEntry;
+						writer = new zip.FileWriter(zipFileEntry);
+						getData();
+					});
+				}
+			}
+		};
+	})();
+
+	(function() {
+		var fileInput = document.getElementById("file-input");
+		var unzipProgress = document.createElement("progress");
+		var fileList = document.getElementById("file-list");
+		var creationMethodInput = document.getElementById("creation-method-input");
+
+		function download(entry, li, a) {
+			model.getEntryFile(entry, creationMethodInput.value, function(blobURL) {
+				var clickEvent = document.createEvent("MouseEvent");
+				if (unzipProgress.parentNode)
+					unzipProgress.parentNode.removeChild(unzipProgress);
+				unzipProgress.value = 0;
+				unzipProgress.max = 0;
+				clickEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				a.href = blobURL;
+				a.download = entry.filename;
+				a.dispatchEvent(clickEvent);
+			}, function(current, total) {
+				unzipProgress.value = current;
+				unzipProgress.max = total;
+				li.appendChild(unzipProgress);
+			});
+		}
+
+		if (typeof requestFileSystem == "undefined")
+			creationMethodInput.options.length = 1;
+		fileInput.addEventListener('change', function() {
+			fileInput.disabled = true;
+			var index = 0;
+			model.getEntries(fileInput.files[0], function(entries) {
+				fileList.innerHTML = "";
+				entries.forEach(function(entry) {
+					/*var li = document.createElement("li");
+					var a = document.createElement("a");
+					a.textContent = entry.filename;
+					a.href = "#";
+					a.addEventListener("click", function(event) {
+						if (!a.download) {
+							download(entry, li, a);
+							event.preventDefault();
+							return false;
+						}
+					}, false);
+					li.appendChild(a);
+					fileList.appendChild(li);*/
+					var filename = entry.filename;
+					var lcfilename = filename.toLowerCase();
+					if(lcfilename.endsWith('kml')) {
+						entry.getData(new zip.TextWriter(), function(text) {
+							// text contains the entry data as a String
+							console.log(text);
+						  }, function(current, total) {
+							// onprogress callback
+						});
+					} else if(lcfilename.endsWith('jpg') || lcfilename.endsWith('png')) {
+						var fr = new FileReader();
+						var image = document.createElement("img");
+						image.id = "img_" + index;
+						//image.style.width = "100%";
+						//image.style.height = "auto";
+						document.body.appendChild(image);
+						entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
+							// text contains the entry data as a String
+							image.src = res;
+						  }, function(current, total) {
+							// onprogress callback
+						});
+						
+						index++;
+					}
+				});
+			});
+		}, false);
+	})();
+
+})(this);
+	
+	</script>
+</body>
+</html>
