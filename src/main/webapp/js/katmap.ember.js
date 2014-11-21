@@ -9,7 +9,7 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 		var _this = this;
 		var map = this.get('map');
 		
-		var dragAndDropInteraction = new ol.interaction.DragAndDrop({
+		var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
 			formatConstructors: [
 				ol.format.KML
 			]
