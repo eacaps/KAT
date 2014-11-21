@@ -1,3 +1,10 @@
+if (typeof String.prototype.endsWith !== 'function') {
+	String.prototype.endsWith = function(suffix) {
+        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	};
+}
+zip.workerScriptsPath = "js/libs/zipjs/";
+
 function getMapHeight() {
 	var windowheight = jQuery(window).height() - jQuery('#navbarele').height();
 	return windowheight;
@@ -15,7 +22,7 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 			]
 		});
 		dragAndDropInteraction.on('addfeatures', function(evt) {
-			var filename = evt.file.fileName;
+			var filename = evt.file.filename;
 			var vectorsource = new ol.source.Vector({
 				features: evt.features,
 				projection: evt.projection

@@ -77,6 +77,7 @@ ol.interaction.DragAndDropZip.prototype.disposeInternal = function() {
  * @private
  */
 ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
+  var _self = this;
   var files = event.getBrowserEvent().dataTransfer.files;
   var i, ii, file;
   for (i = 0, ii = files.length; i < ii; ++i) {
@@ -89,8 +90,40 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
 	
 	zip.createReader(new zip.BlobReader(file), function(zipReader) {
 		zipReader.getEntries(function(entries) {
+			var index = 0;
 			entries.forEach(function(entry) {
-				console.log('entry:' + entry);
+				
+				
+				
+				var filename = entry.filename;
+				var lcfilename = filename.toLowerCase();
+				if(lcfilename.endsWith('kml')) {
+					entry.getData(new zip.TextWriter(), function(text) {
+						// text contains the entry data as a String
+						console.log(text);
+						_self.handleResult_(entry, text);
+					  }, function(current, total) {
+						// onprogress callback
+					});
+				} else if(lcfilename.endsWith('jpg')) {
+					var fr = new FileReader();
+					var image = document.createElement("img");
+					image.id = "img_" + index;
+					//image.style.width = "100%";
+					//image.style.height = "auto";
+					document.body.appendChild(image);
+					entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
+						// text contains the entry data as a String
+						image.src = res;
+					  }, function(current, total) {
+						// onprogress callback
+					});
+					
+					index++;
+				}
+				
+				
+				
 			});
 		});
 	}, function() {alert('what')});
