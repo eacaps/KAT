@@ -56,6 +56,8 @@ ol.interaction.DragAndDropZip = function(opt_options) {
    * @type {goog.events.Key|undefined}
    */
   this.dropListenKey_ = undefined;
+  
+  this.imgSrcMap_ = {};
 
 };
 goog.inherits(ol.interaction.DragAndDropZip, ol.interaction.Interaction);
@@ -70,7 +72,6 @@ ol.interaction.DragAndDropZip.prototype.disposeInternal = function() {
   }
   goog.base(this, 'disposeInternal');
 };
-
 
 /**
  * @param {goog.events.BrowserEvent} event Event.
@@ -93,8 +94,6 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
 			var index = 0;
 			entries.forEach(function(entry) {
 				
-				
-				
 				var filename = entry.filename;
 				var lcfilename = filename.toLowerCase();
 				if(lcfilename.endsWith('kml')) {
@@ -111,10 +110,11 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
 					image.id = "img_" + index;
 					//image.style.width = "100%";
 					//image.style.height = "auto";
-					document.body.appendChild(image);
+					//document.body.appendChild(image);
 					entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
 						// text contains the entry data as a String
 						image.src = res;
+						_self.imgSrcMap_[filename] = res;
 					  }, function(current, total) {
 						// onprogress callback
 					});
@@ -130,6 +130,9 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
   };
 };
 
+ol.interaction.DragAndDropZip.prototype.getImgSrcMap = function() {
+	return this.imgSrcMap_;
+}
 
 /**
  * @param {File} file File.
@@ -151,7 +154,7 @@ ol.interaction.DragAndDropZip.prototype.handleResult_ = function(file, result) {
   var i, ii;
   for (i = 0, ii = formatConstructors.length; i < ii; ++i) {
     var formatConstructor = formatConstructors[i];
-    var format = new formatConstructor();
+    var format = new formatConstructor({imgSrcMap : this.imgSrcMap_});
     var readFeatures = this.tryReadFeatures_(format, result);
     if (!goog.isNull(readFeatures)) {
       var featureProjection = format.readProjection(result);

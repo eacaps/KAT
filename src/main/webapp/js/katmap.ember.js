@@ -18,7 +18,7 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 		
 		var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
 			formatConstructors: [
-				ol.format.KML
+				ol.format.KMZ
 			]
 		});
 		dragAndDropInteraction.on('addfeatures', function(evt) {
