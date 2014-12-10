@@ -61,12 +61,12 @@ ol.format.KMZ = function(opt_options) {
 };
 goog.inherits(ol.format.KMZ, ol.format.KML);
 
-ol.format.KMZ.readLatLonBox_ = function(node, objectStack) {
+ol.format.readLatLonBox_ = function(node, objectStack) {
   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
   goog.asserts.assert(node.localName == 'LatLonBox');
 
-  var latlonboxobj = ol.xml.pushParseAndPop({}, ol.format.KMZ.LATLONBOX_PARSERS_, node, objectStack);
-  if(goog.isDef(latlonboxobj)) {
+  var latlonboxobj = ol.xml.pushParseAndPop({}, ol.format.LATLONBOX_PARSERS_, node, objectStack);
+  if(good.isDef(latlonboxobj)) {
     return latlonboxobj;
   } else {
     return undefined;
@@ -89,91 +89,6 @@ ol.format.KMZ.GROUNDOVERLAY_PARSERS_ = ol.xml.makeParsersNS(
   });
 
 /**
- * Read the first feature from a KMZ source.
- *
- * @function
- * @param {ArrayBuffer|Document|Node|Object|string} source Source.
- * @param {olx.format.ReadOptions=} opt_options Read options.
- * @return {ol.Feature} Feature.
- * @api stable
- */
-ol.format.KMZ.prototype.readFeature;
-
-
-/**
- * @inheritDoc
- */
-ol.format.KMZ.prototype.readFeatureFromNode = function(node, opt_options) {
-  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
-  if (!goog.array.contains(ol.format.KML.NAMESPACE_URIS_, node.namespaceURI)) {
-    return null;
-  }
-  goog.asserts.assert(node.localName == 'Placemark');
-  var feature = this.readPlacemark_(
-      node, [this.getReadOptions(node, opt_options)]);
-  if (goog.isDef(feature)) {
-    return feature;
-  } else {
-    return null;
-  }
-};
-
-
-/**
- * Read all features from a KMZ source.
- *
- * @function
- * @param {ArrayBuffer|Document|Node|Object|string} source Source.
- * @param {olx.format.ReadOptions=} opt_options Read options.
- * @return {Array.<ol.Feature>} Features.
- * @api stable
- */
-ol.format.KMZ.prototype.readFeatures;
-
-
-/**
- * @inheritDoc
- */
-ol.format.KMZ.prototype.readFeaturesFromNode = function(node, opt_options) {
-  goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
-  if (!goog.array.contains(ol.format.KML.NAMESPACE_URIS_, node.namespaceURI)) {
-    return [];
-  }
-  var features;
-  var localName = ol.xml.getLocalName(node);
-  if (localName == 'Document' || localName == 'Folder') {
-    features = this.readDocumentOrFolder_(
-        node, [this.getReadOptions(node, opt_options)]);
-    if (goog.isDef(features)) {
-      return features;
-    } else {
-      return [];
-    }
-  } else if (localName == 'Placemark') {
-    var feature = this.readPlacemark_(
-        node, [this.getReadOptions(node, opt_options)]);
-    if (goog.isDef(feature)) {
-      return [feature];
-    } else {
-      return [];
-    }
-  } else if (localName == 'kml') {
-    features = [];
-    var n;
-    for (n = node.firstElementChild; !goog.isNull(n);
-         n = n.nextElementSibling) {
-      var fs = this.readFeaturesFromNode(n, opt_options);
-      if (goog.isDef(fs)) {
-        goog.array.extend(features, fs);
-      }
-    }
-    return features;
-  } else {
-    return [];
-  }
-};
-
-/**
  * @param {Node} node Node.
  * @param {Array.<*>} objectStack Object stack.
  * @private
@@ -185,7 +100,7 @@ ol.format.KMZ.prototype.readDocumentOrFolder_ = function(node, objectStack) {
   goog.asserts.assert(localName == 'Document' || localName == 'Folder');
   // FIXME use scope somehow
   var parsersNS = ol.xml.makeParsersNS(
-      ol.format.KML.NAMESPACE_URIS_, {
+      ol.format.KMZ.NAMESPACE_URIS_, {
         'Folder': ol.xml.makeArrayExtender(this.readDocumentOrFolder_, this),
         'Placemark': ol.xml.makeArrayPusher(this.readPlacemark_, this),
         'Style': goog.bind(this.readSharedStyle_, this),
@@ -203,7 +118,7 @@ ol.format.KMZ.prototype.readDocumentOrFolder_ = function(node, objectStack) {
 
 ol.format.KMZ.prototype.readGroundOverlay_ = function(node, objectStack) {
   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
-  goog.asserts.assert(node.localName == 'GroundOverlay');
+  goog.asserts.assert(node.localName == 'LatLonBox');
 
   var object = ol.xml.pushParseAndPop({type:'overlay'}, ol.format.KMZ.GROUNDOVERLAY_PARSERS_, node, objectStack);
   if(!goog.isDef(object)) {

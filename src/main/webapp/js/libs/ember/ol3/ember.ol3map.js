@@ -91,7 +91,7 @@ Ol3Map.Ol3MapView = Ember.View.extend({
 		view.on('change:rotation', function(evt) {
 			var view = evt.target;
 			var rads = view.getRotation();
-			_this.set('rotate', rotation);
+			_this.set('rotate', rads);
 		})
 		
 		this.set('map', map);

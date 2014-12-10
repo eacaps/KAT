@@ -16,13 +16,59 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 		var _this = this;
 		var map = this.get('map');
 		
-		var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
+		/*var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
+			formatConstructors: [
+				ol.format.KMZ
+			]
+		});*/
+		var dragAndDropInteraction = new ol.interaction.DragAndDrop({
 			formatConstructors: [
 				ol.format.KMZ
 			]
 		});
 		dragAndDropInteraction.on('addfeatures', function(evt) {
 			var filename = evt.file.filename;
+
+			var features = evt.features;
+			if(features && features.length > 0) {
+				var vectorfeatures = [];
+				var overlays = [];
+				var group = new ol.layer.Group({});
+				for(var x=0; x<features.length; x++) {
+					var feature = features[x];
+					if(feature.get('type') == 'overlay') {
+						overlays.push(feature);
+					} else {
+						vectorfeatures.push(features);
+					}
+				}
+				for(var x=0; x<overlays.length; x++) {
+					var curoverlay = overlays[x];
+					var llbox = curoverlay.get('LatLonBox');
+					var overlaysource = new ol.source.ImageOverlay({
+						url: curoverlay.get('Icon').href,
+						imageExtent: [llbox.west, llbox.south, llbox.east, llbox.north],
+						projection: event.projection
+					});
+					var overlayer = new ol.layer.Image({
+						source: overlaysource
+					});
+					group.getLayers().push(overlayer);
+				}
+				if(vectorfeatures.length > 0) {
+					var vectorsource = new ol.source.Vector({
+						features: vectorfeatures,
+						projection: event.projection
+					});
+					var vectorlayer = new ol.layer.Vector({
+						source: vectorsource
+					});
+					group.getLayers.push(vectorlayer);
+				}
+				map.addLayer(group);
+			}
+
+			/*
 			var vectorsource = new ol.source.Vector({
 				features: evt.features,
 				projection: evt.projection
@@ -30,9 +76,9 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 			var newlayer = new ol.layer.Vector({
 				source: vectorsource
 			});
-			_this.get('controller').send('addFile', filename, newlayer);
-			map.getLayers().push(newlayer);
-			_this.send('zoomToObject', newlayer, 'layer');
+			*/
+			//_this.get('controller').send('addFile', filename, newlayer);
+			//_this.send('zoomToObject', vectorlayer, 'layer');
 		});
 		map.addInteraction(dragAndDropInteraction);
 
