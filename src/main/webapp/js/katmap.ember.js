@@ -1,8 +1,3 @@
-if (typeof String.prototype.endsWith !== 'function') {
-	String.prototype.endsWith = function(suffix) {
-        return this.indexOf(suffix, this.length - suffix.length) !== -1;
-	};
-}
 zip.workerScriptsPath = "js/libs/zipjs/";
 
 function getMapHeight() {
@@ -16,30 +11,33 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 		var _this = this;
 		var map = this.get('map');
 		
-		/*var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
+		var dragAndDropInteraction = new ol.interaction.DragAndDropZip({
 			formatConstructors: [
 				ol.format.KMZ
 			]
-		});*/
+		});/*
 		var dragAndDropInteraction = new ol.interaction.DragAndDrop({
 			formatConstructors: [
 				ol.format.KMZ
 			]
-		});
+		});*/
 		dragAndDropInteraction.on('addfeatures', function(evt) {
 			var filename = evt.file.filename;
 
 			var features = evt.features;
 			if(features && features.length > 0) {
-				var vectorfeatures = [];
+				var vectorfeatures = new ol.Collection();
 				var overlays = [];
 				var group = new ol.layer.Group({});
+				var vectorsource = new ol.source.Vector({
+					projection: evt.projection
+				});
 				for(var x=0; x<features.length; x++) {
 					var feature = features[x];
 					if(feature.get('type') == 'overlay') {
 						overlays.push(feature);
 					} else {
-						vectorfeatures.push(features);
+						vectorsource.addFeature(feature);
 					}
 				}
 				for(var x=0; x<overlays.length; x++) {
@@ -55,15 +53,12 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 					});
 					group.getLayers().push(overlayer);
 				}
-				if(vectorfeatures.length > 0) {
-					var vectorsource = new ol.source.Vector({
-						features: vectorfeatures,
-						projection: event.projection
-					});
+				if(vectorsource.getFeatures().length > 0) {
 					var vectorlayer = new ol.layer.Vector({
 						source: vectorsource
 					});
-					group.getLayers.push(vectorlayer);
+					group.getLayers().push(vectorlayer);
+					_this.send('zoomToObject', vectorlayer, 'layer');
 				}
 				map.addLayer(group);
 			}

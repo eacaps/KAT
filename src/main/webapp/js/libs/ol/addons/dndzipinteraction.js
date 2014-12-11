@@ -83,50 +83,51 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
   var i, ii, file;
   for (i = 0, ii = files.length; i < ii; ++i) {
     file = files[i];
-    // The empty string param is a workaround for
-    // https://code.google.com/p/closure-library/issues/detail?id=524
-   /* var reader = goog.fs.FileReader.readAsText(file, '');
-    reader.addCallback(goog.partial(this.handleResult_, file), this);*/
-	
-	
-	zip.createReader(new zip.BlobReader(file), function(zipReader) {
-		zipReader.getEntries(function(entries) {
-			var index = 0;
-			entries.forEach(function(entry) {
-				
-				var filename = entry.filename;
-				var lcfilename = filename.toLowerCase();
-				if(lcfilename.endsWith('kml')) {
-					entry.getData(new zip.TextWriter(), function(text) {
-						// text contains the entry data as a String
-						console.log(text);
-						_self.handleResult_(entry, text);
-					  }, function(current, total) {
-						// onprogress callback
-					});
-				} else if(lcfilename.endsWith('jpg')) {
-					var fr = new FileReader();
-					var image = document.createElement("img");
-					image.id = "img_" + index;
-					//image.style.width = "100%";
-					//image.style.height = "auto";
-					//document.body.appendChild(image);
-					entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
-						// text contains the entry data as a String
-						image.src = res;
-						_self.imgSrcMap_[filename] = res;
-					  }, function(current, total) {
-						// onprogress callback
-					});
-					
-					index++;
-				}
-				
-				
-				
-			});
-		});
-	}, function() {alert('what')});
+    var filename = file.name.toLowerCase();
+    if(goog.string.endsWith(filename, 'kml')) {
+      // The empty string param is a workaround for
+      // https://code.google.com/p/closure-library/issues/detail?id=524
+      var reader = goog.fs.FileReader.readAsText(file, '');
+      reader.addCallback(goog.partial(this.handleResult_, file), this);
+    }
+	  else if (goog.string.endsWith(filename, 'kmz')) {
+    	zip.createReader(new zip.BlobReader(file), function(zipReader) {
+    		zipReader.getEntries(function(entries) {
+    			var index = 0;
+    			entries.forEach(function(entry) {
+    				
+    				var subfilename = entry.filename;
+    				var lcsubname = subfilename.toLowerCase();
+    				if(goog.string.endsWith(lcsubname, 'kml')) {
+    					entry.getData(new zip.TextWriter(), function(text) {
+    						// text contains the entry data as a String
+    						console.log(text);
+    						_self.handleResult_(entry, text);
+    					  }, function(current, total) {
+    						// onprogress callback
+    					});
+    				} else if(goog.string.endsWith(lcsubname, 'jpg')) {
+    					var fr = new FileReader();
+    					var image = document.createElement("img");
+    					image.id = "img_" + index;
+    					//image.style.width = "100%";
+    					//image.style.height = "auto";
+    					//document.body.appendChild(image);
+    					entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
+    						// text contains the entry data as a String
+    						image.src = res;
+    						_self.imgSrcMap_[subfilename] = res;
+    					  }, function(current, total) {
+    						// onprogress callback
+    					});
+    					index++;
+    				}
+    			});
+    		});
+    	}, function() {
+        alert('error reading zip file')
+      });
+    }
   };
 };
 

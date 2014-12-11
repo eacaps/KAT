@@ -457,7 +457,7 @@ ol.format.KMZ.readStyleMapValue_ = function(node, objectStack) {
  * @param {Array.<*>} objectStack Object stack.
  * @private
  */
-ol.format.KMZ.IconStyleParser_ = function(node, objectStack) {
+ol.format.KMZ.IconStyleParser_ = function(node, objectStack, self) {
   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
   goog.asserts.assert(node.localName == 'IconStyle');
   // FIXME refreshMode
