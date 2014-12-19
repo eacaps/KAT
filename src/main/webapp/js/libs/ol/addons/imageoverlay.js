@@ -48,7 +48,7 @@ ol.source.ImageOverlay.prototype.generateTransform = function(pixelratio, viewre
   var scalex = pixelratio * xres / (viewresolution * imgpixelratio);
   var scaley = pixelratio * yres / (viewresolution * imgpixelratio);
 
-  ol.vec.Mat4.makeTransform2D(transform,
+  ol.vec.Mat4.modifiedTransform2D(transform,
   	pixelratio * framestate.size[0] / 2,
   	pixelratio * framestate.size[1] / 2,
   	scalex, scaley,
@@ -124,3 +124,24 @@ ol.renderer.canvas.ImageLayer.prototype.prepareFrame =
 
   return true;
 };
+
+ol.vec.Mat4.modifiedTransform2D = function(mat, translateX1, translateY1, scaleX, scaleY, rotation, translateX2, translateY2) {
+	goog.vec.Mat4.makeIdentity(mat);
+	if(translateX1 !== 0 || translateY1 !== 0) {
+		goog.vec.Mat4.translate(mat, translateX1, translateY1, 0);
+	}
+	
+	if(rotation !== 0) {
+		goog.vec.Mat4.rotateZ(mat, rotation);
+	}
+	
+	if(scaleX !== 1 || scaleY !== 1) {
+		goog.vec.Mat4.scale(mat, scaleX, scaleY, 1);
+	}
+	
+	if(translateX2 !== 0 || translateY2 !== 0) {
+		goog.vec.Mat4.translate(mat, translateX2, translateY2, 0);
+	}
+	
+	return mat;
+}

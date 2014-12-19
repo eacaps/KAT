@@ -73,6 +73,20 @@ ol.interaction.DragAndDropZip.prototype.disposeInternal = function() {
   goog.base(this, 'disposeInternal');
 };
 
+ol.interaction.DragAndDropZip.prototype.readImage_ = function(entry, filename, type) {
+	var _self = this;
+	var fr = new FileReader();
+	var image = document.createElement("img");
+	image.id = "img_" + filename;
+	entry.getData(new zip.Data64URIWriter("image/"+type),
+		function(res) {
+			image.src = res;
+			_self.imgSrcMap_[filename] = res;
+		}, function(current, total) {
+		}
+	);
+}
+
 /**
  * @param {goog.events.BrowserEvent} event Event.
  * @private
@@ -91,38 +105,30 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
       reader.addCallback(goog.partial(this.handleResult_, file), this);
     }
 	  else if (goog.string.endsWith(filename, 'kmz')) {
+		var thekmlentry = null;
     	zip.createReader(new zip.BlobReader(file), function(zipReader) {
     		zipReader.getEntries(function(entries) {
-    			var index = 0;
     			entries.forEach(function(entry) {
-    				
     				var subfilename = entry.filename;
     				var lcsubname = subfilename.toLowerCase();
     				if(goog.string.endsWith(lcsubname, 'kml')) {
-    					entry.getData(new zip.TextWriter(), function(text) {
-    						// text contains the entry data as a String
-    						console.log(text);
-    						_self.handleResult_(entry, text);
-    					  }, function(current, total) {
-    						// onprogress callback
-    					});
+    					thekmlentry = entry;
     				} else if(goog.string.endsWith(lcsubname, 'jpg')) {
-    					var fr = new FileReader();
-    					var image = document.createElement("img");
-    					image.id = "img_" + index;
-    					//image.style.width = "100%";
-    					//image.style.height = "auto";
-    					//document.body.appendChild(image);
-    					entry.getData(new zip.Data64URIWriter("image/jpg"), function(res) {
-    						// text contains the entry data as a String
-    						image.src = res;
-    						_self.imgSrcMap_[subfilename] = res;
-    					  }, function(current, total) {
-    						// onprogress callback
-    					});
-    					index++;
+    					_self.readImage_(entry, subfilename, 'jpg');
+    				} else if(goog.string.endsWith(lcsubname, 'gif')) {
+    					_self.readImage_(entry, subfilename, 'gif');
+    				} else if(goog.string.endsWith(lcsubname, 'png')) {
+    					_self.readImage_(entry, subfilename, 'png');
     				}
     			});
+				
+				thekmlentry.getData(new zip.TextWriter(), function(text) {
+					// text contains the entry data as a String
+					//console.log(text);
+					_self.handleResult_(thekmlentry, text);
+				  }, function(current, total) {
+					// onprogress callback
+				});
     		});
     	}, function() {
         alert('error reading zip file')
