@@ -40,11 +40,14 @@ Kat.MapView = Ol3Map.Ol3MapView.extend({
 						vectorsource.addFeature(feature);
 					}
 				}
+				var imgsrcmap = this.getImgSrcMap()
 				for(var x=0; x<overlays.length; x++) {
 					var curoverlay = overlays[x];
 					var llbox = curoverlay.get('LatLonBox');
+					var imgurl = curoverlay.get('Icon').href
+					imgurl = imgsrcmap[imgurl] ? imgsrcmap[imgurl] : imgurl;
 					var overlaysource = new ol.source.ImageOverlay({
-						url: curoverlay.get('Icon').href,
+						url: imgurl,
 						imageExtent: [llbox.west, llbox.south, llbox.east, llbox.north],
 						projection: event.projection
 					});

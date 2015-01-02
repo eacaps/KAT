@@ -5,6 +5,7 @@ goog.provide('ol.interaction.DragAndDropZipEvent');
 
 goog.require('goog.asserts');
 goog.require('goog.events');
+goog.require('goog.Promise');
 goog.require('goog.events.Event');
 goog.require('goog.events.FileDropHandler');
 goog.require('goog.events.FileDropHandler.EventType');
@@ -78,13 +79,16 @@ ol.interaction.DragAndDropZip.prototype.readImage_ = function(entry, filename, t
 	var fr = new FileReader();
 	var image = document.createElement("img");
 	image.id = "img_" + filename;
-	entry.getData(new zip.Data64URIWriter("image/"+type),
-		function(res) {
-			image.src = res;
-			_self.imgSrcMap_[filename] = res;
-		}, function(current, total) {
-		}
-	);
+	return new goog.Promise(function(resolve, reject) {
+		entry.getData(new zip.Data64URIWriter("image/"+type),
+			function(res) {
+				image.src = res;
+				_self.imgSrcMap_[filename] = res;
+				resolve();
+			}, function(current, total) {
+			}
+		);
+	});
 }
 
 /**
@@ -107,6 +111,7 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
 	  else if (goog.string.endsWith(filename, 'kmz')) {
 		var thekmlentry = null;
     	zip.createReader(new zip.BlobReader(file), function(zipReader) {
+			var promises = [];
     		zipReader.getEntries(function(entries) {
     			entries.forEach(function(entry) {
     				var subfilename = entry.filename;
@@ -114,20 +119,22 @@ ol.interaction.DragAndDropZip.prototype.handleDrop_ = function(event) {
     				if(goog.string.endsWith(lcsubname, 'kml')) {
     					thekmlentry = entry;
     				} else if(goog.string.endsWith(lcsubname, 'jpg')) {
-    					_self.readImage_(entry, subfilename, 'jpg');
+    					promises.push(_self.readImage_(entry, subfilename, 'jpg'));
     				} else if(goog.string.endsWith(lcsubname, 'gif')) {
-    					_self.readImage_(entry, subfilename, 'gif');
+    					promises.push(_self.readImage_(entry, subfilename, 'gif'));
     				} else if(goog.string.endsWith(lcsubname, 'png')) {
-    					_self.readImage_(entry, subfilename, 'png');
+    					promises.push(_self.readImage_(entry, subfilename, 'png'));
     				}
     			});
 				
-				thekmlentry.getData(new zip.TextWriter(), function(text) {
-					// text contains the entry data as a String
-					//console.log(text);
-					_self.handleResult_(thekmlentry, text);
-				  }, function(current, total) {
-					// onprogress callback
+				goog.Promise.all(promises).then(function(value) {
+					thekmlentry.getData(new zip.TextWriter(), function(text) {
+						// text contains the entry data as a String
+						//console.log(text);
+						_self.handleResult_(thekmlentry, text);
+					  }, function(current, total) {
+						// onprogress callback
+					});
 				});
     		});
     	}, function() {
